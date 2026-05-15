@@ -1,0 +1,64 @@
+function TaskDetailModal({ task, onClose, onUpdated }: TaskDetailModalProps) {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    apiFetch<Comment[]>(`/api/tasks/${task.id}/comments`).then(setComments).catch(() => {});
+    apiFetch<AuditEntry[]>(`/api/tasks/${task.id}/audit`).then(setAudit).catch(() => {});
+  }, [task.id]);
+
+  const priorityColors: Record<string, string> = {
+    low: "text-muted-foreground", medium: "text-chart-3", high: "text-accent", critical: "text-destructive",
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    setSubmitting(true);
+    try {
+      const comment = await apiFetch<Comment>(`/api/tasks/${task.id}/comments`, {
+        method: "POST", body: JSON.stringify({ body: newComment }),
+      });
+      setComments((prev) => [...prev, comment]);
+      setNewComment(""); onUpdated();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to post comment");
+    } finally { setSubmitting(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-background/90 z-50 flex items-center justify-center p-8" onClick={onClose}>
+      <div className="border-4 border-primary p-6 bg-background max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h2 className="text-2xl mb-2">{task.title}</h2>
+              <div className="flex gap-4 text-sm text-muted-foreground">
+                <div>TASK_ID: {task.id}</div>
+                <div className={priorityColors[task.priority]}>PRIORITY: {task.priority.toUpperCase()}</div>
+              </div>
+            </div>
+            <button type="button" onClick={onClose} className="border-2 border-destructive px-4 py-2">CLOSE</button>
+          </div>
+          <div className="grid grid-cols-2 gap-4 border-2 border-primary/30 p-4 bg-card text-sm">
+            <div><div className="text-muted-foreground">ASSIGNEE:</div><div className="text-accent">{task.assigneeName}</div></div>
+            <div><div className="text-muted-foreground">TEAM:</div><div className="text-accent">{task.teamName}</div></div>
+            <div><div className="text-muted-foreground">DEADLINE:</div><div className="text-accent">{task.deadline}</div></div>
+            <div><div className="text-muted-foreground">STATUS:</div><div className="text-accent">{task.status.replace("_", " ").toUpperCase()}</div></div>
+          </div>
+        </div>
+        <div className="mb-6"><div className="text-sm text-muted-foreground mb-2">DESCRIPTION:</div><div className="border-2 border-primary/30 p-4 bg-card">{task.description}</div></div>
+        <div className="mb-6"><div className="text-sm text-muted-foreground mb-2">STATUS HISTORY:</div><div className="border-2 border-primary/30 p-4 bg-card text-sm space-y-2 max-h-32 overflow-y-auto">{audit.length === 0 ? <div className="text-muted-foreground">No changes yet</div> : audit.map((a) => <div key={a.auditKey}>{a.changedByName}: {a.fromStatus} to {a.toStatus}</div>)}</div></div>
+        <div><div className="text-sm text-muted-foreground mb-2">COMMENTS ({comments.length}):</div>
+        <div className="border-2 border-primary/30 p-4 bg-card space-y-3 mb-3 max-h-40 overflow-y-auto">
+          {comments.length === 0 ? <div className="text-center text-muted-foreground py-2 text-sm">No comments yet</div> : comments.map((c) => (
+            <div key={c.commentId} className="border-b border-primary/20 pb-2"><div className="text-xs text-accent">{c.authorName}</div><div>{c.body}</div></div>
+          ))}
+        </div>
+        <div className="flex gap-2"><input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add comment..." className="flex-1 border-2 border-primary/50 bg-background px-3 py-2 text-sm" /><button type="button" onClick={handleAddComment} disabled={submitting} className="border-2 border-accent px-4 py-2">POST</button></div>
+        </div>
+      </div>
+    </div>
+  );
+}

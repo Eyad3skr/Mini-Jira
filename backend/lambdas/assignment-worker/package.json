@@ -1,0 +1,10 @@
+{
+  "name": "assignment-worker",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch": "^3.787.0",
+    "@aws-sdk/client-dynamodb": "^3.787.0",
+    "@aws-sdk/lib-dynamodb": "^3.787.0",
+    "ulid": "^2.4.0"
+  }
+}

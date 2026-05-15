@@ -1,0 +1,11 @@
+
+        <div className="flex-1 flex overflow-hidden relative">
+          <RadialNav currentView={currentView} onViewChange={setCurrentView} />
+
+          <main className="flex-1 overflow-auto p-6">
+            {currentView === 'dashboard' && <Dashboard user={user} />}
+            {currentView === 'projects' && <ProjectsView user={user} />}
+            {currentView === 'teams' && <TeamsView user={user} />}
+            {currentView === 'analytics' && <AnalyticsView user={user} />}
+          </main>
+        </div>

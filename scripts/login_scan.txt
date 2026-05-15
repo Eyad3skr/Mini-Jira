@@ -1,0 +1,3 @@
+      <div className="pointer-events-none fixed inset-0 z-50 opacity-10">
+        <div className="h-full w-full" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #00ff88 2px, #00ff88 4px)' }} />
+      </div>

@@ -1,0 +1,29 @@
+import { useState } from 'react';
+import { toast } from 'sonner';
+import type { User } from '../../lib/types';
+import { DEV_USERS, fetchMe, loginWithDevProfile } from '../../lib/auth';
+
+interface LoginScreenProps {
+  onLogin: (user: User) => void;
+}
+
+const useDevLogin = import.meta.env.VITE_DEV_MOCK_LOGIN === 'true';
+
+export default function LoginScreen({ onLogin }: LoginScreenProps) {
+  const [loading, setLoading] = useState(false);
+
+  const handleDevLogin = async (userId: string) => {
+    setLoading(true);
+    try {
+      await loginWithDevProfile(userId);
+      const me = await fetchMe();
+      onLogin(me);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="size-full bg-background text-foreground flex items-center justify-center relative overflow-hidden">

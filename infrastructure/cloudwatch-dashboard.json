@@ -1,0 +1,40 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "properties": {
+        "title": "Tasks Created Per Day",
+        "metrics": [["MiniJira", "TasksCreated"]],
+        "period": 86400,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "title": "Tasks Closed Per Team",
+        "metrics": [["MiniJira", "TasksClosed", "TeamId", "frontend"], [".", ".", ".", "backend"]],
+        "period": 86400,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "title": "Tasks Assigned Per Team",
+        "metrics": [["MiniJira", "TasksAssignedPerTeam"]],
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "properties": {
+        "title": "EC2 CPU Utilization",
+        "metrics": [["AWS/EC2", "CPUUtilization"]],
+        "period": 300,
+        "stat": "Average"
+      }
+    }
+  ]
+}

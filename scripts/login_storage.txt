@@ -1,0 +1,5 @@
+              <div>└── STORAGE: S3 + LAMBDA</div>
+              <div>└── NOTIFICATIONS: SNS + SQS</div>
+              <div>└── STATUS: <span className="text-primary">ONLINE</span></motionlessApp>
+            </motionlessApp>
+          </motionlessApp>

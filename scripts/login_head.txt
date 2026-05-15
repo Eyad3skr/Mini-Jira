@@ -1,0 +1,4 @@
+  return (
+    <motionlessApp user={user} setUser={setUser} currentView={currentView} setCurrentView={setCurrentView} />
+  );
+}

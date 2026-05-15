@@ -1,0 +1,13 @@
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: mini-jira-dynamodb
+    ports:
+      - '8000:8000'
+    command: '-jar DynamoDBLocal.jar -sharedDb -inMemory'
+    networks:
+      - mini-jira-net
+
+networks:
+  mini-jira-net:
+    driver: bridge

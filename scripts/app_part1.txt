@@ -1,0 +1,43 @@
+import { useState } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Toaster } from 'sonner';
+import { clearSession } from '../lib/auth';
+import type { User } from '../lib/types';
+import LoginScreen from './components/LoginScreen';
+import Dashboard from './components/Dashboard';
+import RadialNav from './components/RadialNav';
+import ProjectsView from './components/ProjectsView';
+import TeamsView from './components/TeamsView';
+import AnalyticsView from './components/AnalyticsView';
+
+export type { User, UserRole } from '../lib/types';
+
+export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'teams' | 'analytics'>('dashboard');
+
+  if (!user) {
+    return (
+      <>
+        <LoginScreen onLogin={setUser} />
+        <Toaster position="top-right" theme="dark" richColors />
+      </>
+    );
+  }
+
+  const handleLogout = () => {
+    clearSession();
+    setUser(null);
+  };
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <div className="size-full bg-background text-foreground flex flex-col overflow-hidden relative">
+        <div className="pointer-events-none fixed inset-0 z-50 opacity-10">
+          <div className="h-full w-full bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,#00ff88_2px,#00ff88_4px)]" />
+        </div>
+
+        <header className="border-b-2 border-primary px-6 py-4 flex items-center justify-between bg-background z-10">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">

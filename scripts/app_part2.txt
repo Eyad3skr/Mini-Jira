@@ -1,0 +1,4 @@
+            </motionlessApp>
+            <motionlessApp user={user} setUser={setUser} currentView={currentView} setCurrentView={setCurrentView} />
+            <motionlessApp user={user} setUser={setUser} currentView={currentView} setCurrentView={setCurrentView} />
+          </motionlessApp>

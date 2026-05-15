@@ -1,0 +1,35 @@
+{
+  "name": "mini-jira-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "create-tables": "tsx scripts/create-tables.ts",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch": "^3.787.0",
+    "@aws-sdk/client-dynamodb": "^3.787.0",
+    "@aws-sdk/client-s3": "^3.787.0",
+    "@aws-sdk/client-sns": "^3.787.0",
+    "@aws-sdk/lib-dynamodb": "^3.787.0",
+    "@aws-sdk/s3-request-presigner": "^3.787.0",
+    "aws-jwt-verify": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "ulid": "^2.4.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}
