@@ -1,0 +1,7 @@
+node_modules/
+
+# Secrets — keep .env.example files tracked as templates
+.env
+.env.local
+.env.*.local
+backend/.env
