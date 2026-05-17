@@ -2,6 +2,17 @@
 
 Lightweight team task-management app (Cloud Computing 2026 project) with retro terminal UI, Express API, and DynamoDB.
 
+## Project layout
+
+```
+Mini-Jira/
+├── frontend/          # React + Vite (port 5173)
+├── backend/           # Express API (port 3001)
+├── infrastructure/  # AWS deployment notes
+├── docs/
+└── docker-compose.yml
+```
+
 ## Quick Start (Local)
 
 ### Prerequisites
@@ -13,17 +24,14 @@ Lightweight team task-management app (Cloud Computing 2026 project) with retro t
 
 ```bash
 # Install dependencies
-npm install
-cd backend && npm install && cd ..
-
-# Start DynamoDB Local
+npm run setup
+# Or manually:
+npm install && npm install --prefix frontend && npm install --prefix backend
 docker compose up -d
-
-# Create tables and seed demo data (Ali, Sara, Omar + Task A/B)
-cd backend && npm run create-tables && npm run seed && cd ..
+npm run db:setup
 
 # Terminal 1: API (port 3001)
-cd backend && npm run dev
+npm run dev:api
 
 # Terminal 2: Frontend (port 5173)
 npm run dev
@@ -41,7 +49,7 @@ Open http://localhost:5173 and sign in with a dev profile (Ali / Sara / Omar).
 
 ## Environment
 
-- Frontend: `.env` — `VITE_DEV_MOCK_LOGIN=true`, `VITE_API_URL=` (empty uses Vite proxy)
+- Frontend: `frontend/.env` — `VITE_DEV_MOCK_LOGIN=true`, `VITE_API_URL=` (empty uses Vite proxy)
 - Backend: `backend/.env` — `DEV_AUTH=true`, `DYNAMODB_ENDPOINT=http://localhost:8000`
 
 ## Architecture
@@ -55,4 +63,3 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [infrastructure/README.md](
 - EC2 ASG, ALB, CloudFront
 
 Lambdas live in `backend/lambdas/`.
-# Mini-Jira

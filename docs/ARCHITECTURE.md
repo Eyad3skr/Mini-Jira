@@ -70,7 +70,7 @@ npm run seed
 npm run dev
 
 # Frontend (separate terminal)
-npm install && npm run dev
+cd frontend && npm install && npm run dev
 ```
 
 Use dev login profiles (Ali / Sara / Omar) when `DEV_AUTH=true`.

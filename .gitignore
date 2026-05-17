@@ -1,1 +1,11 @@
 .env
+**/.env
+node_modules
+**/node_modules
+frontend/dist
+.vite
+**/.vite
+
+# AWS CLI installer (download to ~/Downloads, not the repo)
+AWSCLIV2.pkg
+*.pkg

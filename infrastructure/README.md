@@ -1,5 +1,7 @@
 # Infrastructure
 
+**Manual deployment checklist (step-by-step):** [AWS-DEPLOYMENT.md](./AWS-DEPLOYMENT.md)
+
 Deploy AWS resources manually or via your preferred IaC tool. Required components:
 
 ## Core
