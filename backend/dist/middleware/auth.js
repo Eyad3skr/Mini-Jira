@@ -66,9 +66,9 @@ export async function authMiddleware(req, res, next) {
             authUser = {
                 sub: profile.userId,
                 email: profile.email,
-                name: profile.name,
+                name: profile.name ?? '',
                 role: (payload['custom:role'] ?? profile.role),
-                teamId: payload['custom:teamId'] ?? profile.teamId,
+                teamId: payload['custom:teamId'] ?? profile.teamId ?? '',
             };
         }
         req.user = authUser;

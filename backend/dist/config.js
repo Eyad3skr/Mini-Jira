@@ -16,8 +16,6 @@ export const config = {
         activityLog: `${prefix}ActivityLog`,
     },
     devAuth: process.env.DEV_AUTH === 'true',
-    /** Team assigned to new Cognito users when no profile exists yet */
-    defaultTeamId: process.env.DEFAULT_TEAM_ID ?? 'frontend',
     cognito: {
         userPoolId: process.env.COGNITO_USER_POOL_ID ?? '',
         clientId: process.env.COGNITO_CLIENT_ID ?? '',

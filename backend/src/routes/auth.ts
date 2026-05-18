@@ -21,7 +21,9 @@ router.post('/login', async (req, res) => {
   }
 
   const teamName =
-    user.teamId === 'all' ? 'ALL_TEAMS' : user.teamId.toUpperCase();
+    user.teamId === 'all'
+      ? 'ALL_TEAMS'
+      : (user.teamId ?? '').toUpperCase();
 
   res.json({
     token: user.userId,

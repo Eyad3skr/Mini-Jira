@@ -11,6 +11,7 @@ import { assertTaskAccess, canUpdateTaskStatus } from '../middleware/teamAccess.
 import { publishTaskAssignment } from '../services/events.js';
 import { getUploadPresignedUrl } from '../services/s3.js';
 import { putMetric } from '../services/metrics.js';
+import { routeParam } from '../utils/routeParam.js';
 import { VALID_PRIORITIES, VALID_STATUSES } from '../types.js';
 import { toTaskResponse, toTaskResponses } from '../utils/taskMapper.js';
 const router = Router();
@@ -58,7 +59,7 @@ router.post('/', authMiddleware, requireRole('manager', 'admin'), async (req, re
         priority: priority,
         deadline: deadline ?? now.split('T')[0],
         assigneeId,
-        assigneeName: assignee.name,
+        assigneeName: assignee.name ?? assignee.email,
         teamId,
         teamName: team.name,
         createdBy: user.sub,
@@ -79,7 +80,7 @@ router.post('/', authMiddleware, requireRole('manager', 'admin'), async (req, re
 });
 router.get('/:id', authMiddleware, async (req, res) => {
     const user = req.user;
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     if (!assertTaskAccess(user, task, res))
@@ -88,7 +89,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 });
 router.patch('/:id', authMiddleware, async (req, res) => {
     const user = req.user;
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     if (!assertTaskAccess(user, task, res))
@@ -135,7 +136,7 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 });
 router.post('/:id/status', authMiddleware, async (req, res) => {
     const user = req.user;
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     if (!assertTaskAccess(user, task, res))
@@ -167,7 +168,7 @@ router.post('/:id/status', authMiddleware, async (req, res) => {
     res.json(await toTaskResponse(updated));
 });
 router.delete('/:id', authMiddleware, requireRole('manager', 'admin'), async (req, res) => {
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     await tasksRepo.deleteTask(task.taskId);
@@ -175,7 +176,7 @@ router.delete('/:id', authMiddleware, requireRole('manager', 'admin'), async (re
 });
 router.get('/:id/comments', authMiddleware, async (req, res) => {
     const user = req.user;
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     if (!assertTaskAccess(user, task, res))
@@ -185,7 +186,7 @@ router.get('/:id/comments', authMiddleware, async (req, res) => {
 });
 router.post('/:id/comments', authMiddleware, async (req, res) => {
     const user = req.user;
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     if (!assertTaskAccess(user, task, res))
@@ -206,7 +207,7 @@ router.post('/:id/comments', authMiddleware, async (req, res) => {
 });
 router.get('/:id/audit', authMiddleware, async (req, res) => {
     const user = req.user;
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     if (!assertTaskAccess(user, task, res))
@@ -216,7 +217,7 @@ router.get('/:id/audit', authMiddleware, async (req, res) => {
 });
 router.post('/:id/image/upload-url', authMiddleware, async (req, res) => {
     const user = req.user;
-    const task = await tasksRepo.getTask(req.params.id);
+    const task = await tasksRepo.getTask(routeParam(req.params.id));
     if (!task)
         return res.status(404).json({ error: 'Task not found', code: 'NOT_FOUND' });
     if (!assertTaskAccess(user, task, res))

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as teamsRepo from '../db/repositories/teams.js';
 import type { AuthenticatedRequest } from '../middleware/auth.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
+import { routeParam } from '../utils/routeParam.js';
 
 const router = Router();
 
@@ -28,13 +29,13 @@ router.post('/', authMiddleware, requireRole('admin', 'manager'), async (req, re
 });
 
 router.patch('/:id', authMiddleware, requireRole('admin', 'manager'), async (req, res) => {
-  const updated = await teamsRepo.updateTeam(req.params.id, req.body);
+  const updated = await teamsRepo.updateTeam(routeParam(req.params.id), req.body);
   if (!updated) return res.status(404).json({ error: 'Not found', code: 'NOT_FOUND' });
   res.json(updated);
 });
 
 router.delete('/:id', authMiddleware, requireRole('admin'), async (req, res) => {
-  const ok = await teamsRepo.deleteTeam(req.params.id);
+  const ok = await teamsRepo.deleteTeam(routeParam(req.params.id));
   if (!ok) return res.status(404).json({ error: 'Not found', code: 'NOT_FOUND' });
   res.status(204).send();
 });

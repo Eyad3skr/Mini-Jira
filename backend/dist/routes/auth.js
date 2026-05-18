@@ -15,7 +15,9 @@ router.post('/login', async (req, res) => {
     if (!user || user.devPassword !== password) {
         return res.status(401).json({ error: 'Invalid email or password', code: 'UNAUTHORIZED' });
     }
-    const teamName = user.teamId === 'all' ? 'ALL_TEAMS' : user.teamId.toUpperCase();
+    const teamName = user.teamId === 'all'
+        ? 'ALL_TEAMS'
+        : (user.teamId ?? '').toUpperCase();
     res.json({
         token: user.userId,
         user: {

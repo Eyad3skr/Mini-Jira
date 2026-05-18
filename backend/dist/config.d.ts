@@ -15,8 +15,6 @@ export declare const config: {
         readonly activityLog: `${string}ActivityLog`;
     };
     readonly devAuth: boolean;
-    /** Team assigned to new Cognito users when no profile exists yet */
-    readonly defaultTeamId: string;
     readonly cognito: {
         readonly userPoolId: string;
         readonly clientId: string;
