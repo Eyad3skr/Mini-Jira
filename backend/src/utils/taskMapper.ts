@@ -1,5 +1,6 @@
 import type { Task } from '../types.js';
-import { getImagePublicUrl } from '../services/s3.js';
+import { config } from '../config.js';
+import { getImageViewUrl } from '../services/s3.js';
 import * as commentsRepo from '../db/repositories/comments.js';
 
 export interface TaskResponse {
@@ -25,6 +26,9 @@ export async function toTaskResponse(task: Task): Promise<TaskResponse> {
     ? task.imageKeys[task.imageKeys.length - 1]
     : undefined;
   const imageKey = latestImage?.resizedKey ?? latestImage?.originalKey;
+  const imageBucket = latestImage?.resizedKey
+    ? config.s3.resizedBucket
+    : config.s3.originalsBucket;
 
   return {
     id: task.taskId,
@@ -38,7 +42,7 @@ export async function toTaskResponse(task: Task): Promise<TaskResponse> {
     teamId: task.teamId,
     teamName: task.teamName,
     projectId: task.projectId,
-    imageUrl: imageKey ? getImagePublicUrl(imageKey) : undefined,
+    imageUrl: imageKey ? await getImageViewUrl(imageKey, imageBucket) : undefined,
     createdAt: task.createdAt,
     comments: count,
   };

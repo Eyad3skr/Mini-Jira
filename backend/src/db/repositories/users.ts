@@ -34,7 +34,15 @@ export async function getUserByEmail(email: string): Promise<UserProfile | null>
   return users.find((u) => u.email.toLowerCase() === normalized) ?? null;
 }
 
+/** DynamoDB GSIs reject empty strings on key attributes (Users.TeamIndex: teamId + name). */
+function toStoredUserItem(user: UserProfile): Record<string, unknown> {
+  const item: Record<string, unknown> = { ...user };
+  if (typeof item.teamId === 'string' && !item.teamId.trim()) delete item.teamId;
+  if (typeof item.name === 'string' && !item.name.trim()) delete item.name;
+  return item;
+}
+
 export async function upsertUser(user: UserProfile): Promise<UserProfile> {
-  await docClient.send(new PutCommand({ TableName, Item: user }));
+  await docClient.send(new PutCommand({ TableName, Item: toStoredUserItem(user) }));
   return user;
 }

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { toast } from 'sonner';
 import { apiFetch, ApiError } from '../../lib/api';
+import { uploadTaskImage, validateTaskImageFile, waitForTaskImage } from '../../lib/taskImage';
 import type { AuditEntry, Comment, Task, TaskStatus, User } from '../../lib/types';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import TaskCard from './TaskCard';
 
 interface KanbanBoardProps {
@@ -163,11 +165,17 @@ interface TaskDetailModalProps {
   onUpdated: () => void;
 }
 
-function TaskDetailModal({ task, onClose, onUpdated }: TaskDetailModalProps) {
+function TaskDetailModal({ task: initialTask, onClose, onUpdated }: TaskDetailModalProps) {
+  const [task, setTask] = useState(initialTask);
   const [comments, setComments] = useState<Comment[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
-  const [newComment, setNewComment] = useState("");
+  const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  useEffect(() => {
+    setTask(initialTask);
+  }, [initialTask]);
 
   useEffect(() => {
     apiFetch<Comment[]>(`/api/tasks/${task.id}/comments`).then(setComments).catch(() => {});
@@ -176,6 +184,27 @@ function TaskDetailModal({ task, onClose, onUpdated }: TaskDetailModalProps) {
 
   const priorityColors: Record<string, string> = {
     low: "text-muted-foreground", medium: "text-chart-3", high: "text-accent", critical: "text-destructive",
+  };
+
+  const handleImageUpload = async (file: File) => {
+    const err = validateTaskImageFile(file);
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    setUploadingImage(true);
+    try {
+      await uploadTaskImage(task.id, file);
+      toast.info('Processing image…');
+      const updated = await waitForTaskImage(task.id);
+      setTask(updated);
+      onUpdated();
+      toast.success('Image updated');
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleAddComment = async () => {
@@ -213,7 +242,40 @@ function TaskDetailModal({ task, onClose, onUpdated }: TaskDetailModalProps) {
             <div><div className="text-muted-foreground">STATUS:</div><div className="text-accent">{task.status.replace("_", " ").toUpperCase()}</div></div>
           </div>
         </div>
-        <div className="mb-6"><div className="text-sm text-muted-foreground mb-2">DESCRIPTION:</div><div className="border-2 border-primary/30 p-4 bg-card">{task.description}</div></div>
+        <div className="mb-6">
+          <div className="text-sm text-muted-foreground mb-2">ATTACHMENT</div>
+          {task.imageUrl ? (
+            <div className="border-2 border-primary/30 mb-2 overflow-hidden">
+              <ImageWithFallback
+                src={task.imageUrl}
+                alt={task.title}
+                className="w-full max-h-64 object-contain bg-card"
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground border border-dashed border-primary/30 p-4 mb-2">
+              No image
+            </p>
+          )}
+          <label className="inline-block border-2 border-primary/50 px-3 py-2 text-sm cursor-pointer hover:bg-primary/10">
+            {uploadingImage ? 'UPLOADING…' : task.imageUrl ? 'REPLACE IMAGE' : 'ADD IMAGE'}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              disabled={uploadingImage}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (f) void handleImageUpload(f);
+              }}
+            />
+          </label>
+        </div>
+        <div className="mb-6">
+          <div className="text-sm text-muted-foreground mb-2">DESCRIPTION</div>
+          <div className="border-2 border-primary/30 p-4 bg-card">{task.description}</div>
+        </div>
         <div className="mb-6"><div className="text-sm text-muted-foreground mb-2">STATUS HISTORY:</div><div className="border-2 border-primary/30 p-4 bg-card text-sm space-y-2 max-h-32 overflow-y-auto">{audit.length === 0 ? <div className="text-muted-foreground">No changes yet</div> : audit.map((a) => <div key={a.auditKey}>{a.changedByName}: {a.fromStatus} to {a.toStatus}</div>)}</div></div>
         <div><div className="text-sm text-muted-foreground mb-2">COMMENTS ({comments.length}):</div>
         <div className="border-2 border-primary/30 p-4 bg-card space-y-3 mb-3 max-h-40 overflow-y-auto">

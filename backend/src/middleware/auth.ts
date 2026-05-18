@@ -2,7 +2,7 @@ import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import type { NextFunction, Request, Response } from 'express';
 import { config } from '../config.js';
 import type { AuthUser, UserRole } from '../types.js';
-import * as usersRepo from '../db/repositories/users.js';
+import { ensureUserProfile } from '../services/userProvisioning.js';
 
 export interface AuthenticatedRequest extends Request {
   user: AuthUser;
@@ -70,20 +70,31 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
         return res.status(500).json({ error: 'Cognito not configured', code: 'AUTH_CONFIG' });
       }
       const payload = await v.verify(token);
-      const profile = await usersRepo.getUser(payload.sub);
+      const profile = await ensureUserProfile(payload.sub, {
+        email: payload.email as string | undefined,
+        name: (payload.name as string) ?? (payload['cognito:username'] as string | undefined),
+      });
       authUser = {
-        sub: payload.sub,
-        email: (payload.email as string) ?? profile?.email ?? '',
-        name: (payload.name as string) ?? profile?.name ?? '',
-        role: ((payload['custom:role'] as string) ?? profile?.role ?? 'employee') as UserRole,
-        teamId: (payload['custom:teamId'] as string) ?? profile?.teamId ?? '',
+        sub: profile.userId,
+        email: profile.email,
+        name: profile.name ?? '',
+        role: ((payload['custom:role'] as string) ?? profile.role) as UserRole,
+        teamId: (payload['custom:teamId'] as string) ?? profile.teamId ?? '',
       };
     }
 
     (req as AuthenticatedRequest).user = authUser;
     next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid token', code: 'UNAUTHORIZED' });
+  } catch (err) {
+    if (config.nodeEnv === 'development') {
+      console.error('[auth] Token verification failed:', err);
+    }
+    const detail =
+      config.nodeEnv === 'development' && err instanceof Error ? err.message : undefined;
+    return res.status(401).json({
+      error: detail ?? 'Invalid token',
+      code: 'UNAUTHORIZED',
+    });
   }
 }
 

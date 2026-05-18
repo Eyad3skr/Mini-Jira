@@ -1,5 +1,6 @@
 import { useDrag } from 'react-dnd';
 import type { Task } from '../../lib/types';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Clock, MessageSquare, AlertTriangle } from 'lucide-react';
 
 interface TaskCardProps {
@@ -49,6 +50,16 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
           />
         ))}
       </div>
+
+      {task.imageUrl && (
+        <div className="mb-2 border border-primary/30 overflow-hidden max-h-28">
+          <ImageWithFallback
+            src={task.imageUrl}
+            alt=""
+            className="w-full h-28 object-cover"
+          />
+        </div>
+      )}
 
       {/* Title */}
       <h4 className="mb-2 break-words">{task.title}</h4>

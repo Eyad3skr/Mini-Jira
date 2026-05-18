@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Toaster } from 'sonner';
-import { clearSession } from '../lib/auth';
+import { clearSession, getStoredUser, getToken, isOidcConfigured } from '../lib/auth';
 import type { User } from '../lib/types';
 import LoginScreen from './components/LoginScreen';
+import OnboardingScreen from './components/OnboardingScreen';
+import OidcAuthBridge from './OidcAuthBridge';
+import OidcLogoutButton from './components/OidcLogoutButton';
 import Dashboard from './components/Dashboard';
 import RadialNav from './components/RadialNav';
 import ProjectsView from './components/ProjectsView';
@@ -17,10 +20,29 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'teams' | 'analytics'>('dashboard');
 
+  useEffect(() => {
+    if (isOidcConfigured()) return;
+    const stored = getStoredUser();
+    const token = getToken();
+    if (stored && token) {
+      setUser(stored);
+    }
+  }, []);
+
   if (!user) {
     return (
       <>
+        {isOidcConfigured() && <OidcAuthBridge onAuthenticated={setUser} />}
         <LoginScreen onLogin={setUser} />
+        <Toaster position="top-right" theme="dark" richColors />
+      </>
+    );
+  }
+
+  if (user.needsOnboarding) {
+    return (
+      <>
+        <OnboardingScreen user={user} onComplete={setUser} />
         <Toaster position="top-right" theme="dark" richColors />
       </>
     );
@@ -58,12 +80,17 @@ export default function App() {
             <div className="text-sm">
               ROLE: <span className="text-accent uppercase">{user.role}</span>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-1 border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
-            >
-              LOGOUT
-            </button>
+            {isOidcConfigured() ? (
+              <OidcLogoutButton onLoggedOut={handleLogout} />
+            ) : (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-4 py-1 border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              >
+                LOGOUT
+              </button>
+            )}
           </div>
         </header>
 

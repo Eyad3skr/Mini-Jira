@@ -31,6 +31,9 @@ router.get('/', authMiddleware, async (req, res) => {
       tasks = await tasksRepo.listAllTasks();
     }
   } else {
+    if (!user.teamId) {
+      return res.json([]);
+    }
     tasks = await tasksRepo.listTasksByTeam(user.teamId);
   }
 

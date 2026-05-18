@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Filter, Plus } from 'lucide-react';
 import { apiFetch, ApiError } from '../../lib/api';
-import type { Project, TaskPriority, User, UserProfile } from '../../lib/types';
+import { uploadTaskImage, validateTaskImageFile, waitForTaskImage } from '../../lib/taskImage';
+import type { Project, Task, TaskPriority, User, UserProfile } from '../../lib/types';
 import KanbanBoard from './KanbanBoard';
 
 interface DashboardProps {
@@ -24,6 +25,7 @@ export default function Dashboard({ user }: DashboardProps) {
     projectId: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const teams = user.role === 'manager'
@@ -41,14 +43,28 @@ export default function Dashboard({ user }: DashboardProps) {
       toast.error('Title, assignee, and project are required');
       return;
     }
+    if (imageFile) {
+      const imageErr = validateTaskImageFile(imageFile);
+      if (imageErr) {
+        toast.error(imageErr);
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
-      await apiFetch('/api/tasks', {
+      const created = await apiFetch<Task>('/api/tasks', {
         method: 'POST',
         body: JSON.stringify(form),
       });
-      toast.success('Task created');
+      if (imageFile) {
+        toast.info('Uploading image…');
+        await uploadTaskImage(created.id, imageFile);
+        await waitForTaskImage(created.id, { maxAttempts: 20, intervalMs: 1500 });
+      }
+      toast.success(imageFile ? 'Task created with image' : 'Task created');
       setShowCreateTask(false);
+      setImageFile(null);
       setForm({ title: '', description: '', priority: 'medium', deadline: '', assigneeId: '', teamId: 'frontend', projectId: '' });
       setRefreshKey((k) => k + 1);
     } catch (err) {
@@ -143,12 +159,30 @@ export default function Dashboard({ user }: DashboardProps) {
                   <option key={e.userId} value={e.userId}>{e.name}</option>
                 ))}
               </select>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">TASK IMAGE (OPTIONAL)</div>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="w-full border-2 border-primary/50 bg-background px-3 py-2 text-sm"
+                  onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                />
+                {imageFile && (
+                  <p className="text-xs text-accent mt-1 truncate">{imageFile.name}</p>
+                )}
+              </div>
             </div>
             <div className="flex gap-2 mt-6">
               <button onClick={handleCreate} disabled={submitting} className="flex-1 border-2 border-accent py-2 hover:bg-accent hover:text-accent-foreground disabled:opacity-50">
                 {submitting ? 'CREATING...' : 'CREATE TASK'}
               </button>
-              <button onClick={() => setShowCreateTask(false)} className="flex-1 border-2 border-primary py-2 hover:bg-primary hover:text-primary-foreground">
+              <button
+                onClick={() => {
+                  setShowCreateTask(false);
+                  setImageFile(null);
+                }}
+                className="flex-1 border-2 border-primary py-2 hover:bg-primary hover:text-primary-foreground"
+              >
                 CANCEL
               </button>
             </div>

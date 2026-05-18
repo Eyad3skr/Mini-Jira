@@ -9,6 +9,13 @@ export interface User {
   role: UserRole;
   teamId: string;
   teamName: string;
+  /** True after Cognito sign-up until name + team are saved */
+  needsOnboarding?: boolean;
+}
+
+export interface TeamOption {
+  teamId: string;
+  name: string;
 }
 
 export interface Task {

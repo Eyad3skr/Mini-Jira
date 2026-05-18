@@ -49,7 +49,7 @@ Open http://localhost:5173 and sign in with a dev profile (Ali / Sara / Omar).
 
 ## Environment
 
-- Frontend: `frontend/.env` — `VITE_DEV_MOCK_LOGIN=true`, `VITE_API_URL=` (empty uses Vite proxy)
+- Frontend: `frontend/.env` — see `frontend/.env.example` (Cognito OIDC + optional `VITE_DEV_MOCK_LOGIN`)
 - Backend: `backend/.env` — `DEV_AUTH=true`, `DYNAMODB_ENDPOINT=http://localhost:8000`
 
 ## Architecture

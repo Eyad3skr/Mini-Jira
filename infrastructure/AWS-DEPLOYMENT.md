@@ -34,7 +34,7 @@ One AWS account, you build everything, teammates get **IAM users** (not root). P
 | | `cd backend` — in `backend/.env` for AWS: **remove** `DYNAMODB_ENDPOINT`, set `AWS_REGION=us-east-1` |
 | | `npm run create-tables` then `npm run seed` (optional demo data) |
 | | Confirm tables: `mini-jira-Teams`, `Users`, `Projects`, `Tasks`, `Comments`, `TaskStatusAudit`, `ActivityLog` |
-| 8 | **Cognito** — user pool + app client; custom attributes `custom:role`, `custom:teamId` (match backend). Create demo users (Ali, Sara, Omar). Save pool ID, client ID, region. |
+| 8 | **Cognito** — user pool + app client; `custom:role`, `custom:teamId`. **No phone verification:** Auto-verified attributes = **email** only; app client OAuth scopes = `openid`, `email`, `profile` (not `phone`); sign-in options = **email** only in console. Create demo users (Ali, Sara, Omar). |
 | 9 | **Env (production):** `DEV_AUTH=false`, real Cognito IDs; frontend `VITE_COGNITO_*`, `VITE_DEV_MOCK_LOGIN=false`. Test Cognito against AWS DynamoDB from localhost if possible before EC2. |
 
 ---

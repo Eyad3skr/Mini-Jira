@@ -16,6 +16,9 @@ router.get('/', authMiddleware, async (req, res) => {
     return res.json(projects);
   }
 
+  if (!user.teamId) {
+    return res.json([]);
+  }
   const projects = await projectsRepo.listProjects(user.teamId);
   res.json(projects.filter((p) => canAccessTeam(user, p.teamId)));
 });

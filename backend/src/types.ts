@@ -19,10 +19,14 @@ export interface Team {
 export interface UserProfile {
   userId: string;
   email: string;
-  name: string;
+  /** Omitted until onboarding — empty strings break Users.TeamIndex (name range key) */
+  name?: string;
   role: UserRole;
-  teamId: string;
+  /** Omitted until onboarding — empty strings break GSIs that use teamId */
+  teamId?: string;
   createdAt: string;
+  /** False until user picks name + team after Cognito sign-up */
+  onboardingComplete?: boolean;
   /** Dev-only plaintext password for local login (never use in production). */
   devPassword?: string;
 }

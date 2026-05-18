@@ -1,32 +1,18 @@
-import {
-  AuthenticationDetails,
-  CognitoUser,
-  CognitoUserPool,
-} from 'amazon-cognito-identity-js';
 import { apiFetch } from './api';
+import { getCognitoClientId, getCognitoAuthority, isOidcConfigured } from './cognito';
 import type { User } from './types';
 
 const TOKEN_KEY = 'mini-jira-token';
 const USER_KEY = 'mini-jira-user';
 
-function isRealCognitoValue(value: string | undefined): boolean {
-  if (!value?.trim()) return false;
-  const v = value.trim().toLowerCase();
-  return !v.includes('your-') && !v.includes('xxx') && v !== 'changeme';
+export { isOidcConfigured, getCognitoAuthority, getCognitoClientId };
+
+/** @deprecated Use isOidcConfigured — kept for existing imports */
+export function isCognitoConfigured(): boolean {
+  return isOidcConfigured();
 }
 
-const cognitoConfigured =
-  isRealCognitoValue(import.meta.env.VITE_COGNITO_USER_POOL_ID) &&
-  isRealCognitoValue(import.meta.env.VITE_COGNITO_CLIENT_ID);
-
-function getUserPool(): CognitoUserPool {
-  return new CognitoUserPool({
-    UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
-    ClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
-  });
-}
-
-/** Dev-only quick login (backend DEV_AUTH tokens). Not used when mock flag is off. */
+/** Dev-only quick login (backend DEV_AUTH tokens). */
 export const DEV_USERS: { token: string; user: User }[] = [
   {
     token: 'user-ali',
@@ -63,10 +49,6 @@ export const DEV_USERS: { token: string; user: User }[] = [
   },
 ];
 
-export function isCognitoConfigured(): boolean {
-  return cognitoConfigured;
-}
-
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -91,31 +73,6 @@ export function clearSession() {
   localStorage.removeItem(USER_KEY);
 }
 
-export function loginWithCognito(email: string, password: string): Promise<string> {
-  if (!cognitoConfigured) {
-    return Promise.reject(
-      new Error('Cognito is not configured. Set VITE_COGNITO_USER_POOL_ID and VITE_COGNITO_CLIENT_ID.')
-    );
-  }
-
-  const userPool = getUserPool();
-  const cognitoUser = new CognitoUser({ Username: email.trim(), Pool: userPool });
-  const authDetails = new AuthenticationDetails({
-    Username: email.trim(),
-    Password: password,
-  });
-
-  return new Promise((resolve, reject) => {
-    cognitoUser.authenticateUser(authDetails, {
-      onSuccess: (session) => {
-        const token = session.getAccessToken().getJwtToken();
-        resolve(token);
-      },
-      onFailure: (err) => reject(err),
-    });
-  });
-}
-
 export async function loginWithDevProfile(userId: string): Promise<User> {
   const entry = DEV_USERS.find((d) => d.token === userId);
   if (!entry) throw new Error('Unknown user');
@@ -123,23 +80,40 @@ export async function loginWithDevProfile(userId: string): Promise<User> {
   return entry.user;
 }
 
-export async function fetchMe(): Promise<User> {
-  const me = await apiFetch<{
-    id: string;
-    name: string;
-    email: string;
-    role: User['role'];
-    teamId: string;
-    teamName: string;
-  }>('/api/me');
-  const user: User = {
+function meToUser(me: {
+  id: string;
+  name: string;
+  email: string;
+  role: User['role'];
+  teamId: string;
+  teamName: string;
+  needsOnboarding?: boolean;
+}): User {
+  return {
     id: me.id,
     name: me.name,
     email: me.email,
     role: me.role,
     teamId: me.teamId,
     teamName: me.teamName,
+    needsOnboarding: me.needsOnboarding,
   };
+}
+
+export async function fetchMe(): Promise<User> {
+  const me = await apiFetch<Parameters<typeof meToUser>[0]>('/api/me');
+  const user = meToUser(me);
+  const token = getToken();
+  if (token) setSession(token, user);
+  return user;
+}
+
+export async function completeOnboarding(name: string, teamId: string): Promise<User> {
+  const me = await apiFetch<Parameters<typeof meToUser>[0]>('/api/me/onboarding', {
+    method: 'PUT',
+    body: JSON.stringify({ name: name.trim(), teamId }),
+  });
+  const user = meToUser(me);
   const token = getToken();
   if (token) setSession(token, user);
   return user;
@@ -158,20 +132,4 @@ export async function loginWithDevCredentials(
   });
   setSession(result.token, result.user);
   return result.user;
-}
-
-export async function loginWithCredentials(email: string, password: string): Promise<User> {
-  if (isCognitoConfigured()) {
-    const token = await loginWithCognito(email, password);
-    setSession(token, {
-      id: '',
-      name: '',
-      email,
-      role: 'employee',
-      teamId: '',
-      teamName: '',
-    });
-    return fetchMe();
-  }
-  return loginWithDevCredentials(email, password);
 }
