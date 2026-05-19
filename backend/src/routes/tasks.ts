@@ -61,6 +61,11 @@ router.post('/', authMiddleware, requireRole('manager', 'admin'), async (req, re
     return res.status(400).json({ error: 'Invalid priority', code: 'VALIDATION' });
   }
 
+  const deadlineValue = typeof deadline === 'string' ? deadline.trim() : '';
+  if (!deadlineValue) {
+    return res.status(400).json({ error: 'Date is required', code: 'VALIDATION' });
+  }
+
   const assignee = await usersRepo.getUser(assigneeId);
   const team = await teamsRepo.getTeam(teamId);
   if (!assignee || !team) {
@@ -75,7 +80,7 @@ router.post('/', authMiddleware, requireRole('manager', 'admin'), async (req, re
     description: description ?? '',
     status: 'todo',
     priority: priority as TaskPriority,
-    deadline: deadline ?? now.split('T')[0],
+    deadline: deadlineValue,
     assigneeId,
     assigneeName: assignee.name ?? assignee.email,
     teamId,

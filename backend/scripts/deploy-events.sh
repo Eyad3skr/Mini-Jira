@@ -139,12 +139,12 @@ deploy_lambda() {
     aws lambda wait function-updated --function-name "$fn_name" --region "$REGION"
     aws lambda update-function-configuration \
       --function-name "$fn_name" --region "$REGION" \
-      --runtime nodejs20.x --handler index.handler --timeout 60 --memory-size 256 \
+      --runtime nodejs22.x --handler index.handler --timeout 60 --memory-size 256 \
       --environment "Variables={${env_vars}}" >/dev/null
   else
     aws lambda create-function \
       --function-name "$fn_name" --region "$REGION" \
-      --runtime nodejs20.x --role "$role_arn" --handler index.handler \
+      --runtime nodejs22.x --role "$role_arn" --handler index.handler \
       --zip-file "fileb://$zip_path" --timeout 60 --memory-size 256 \
       --environment "Variables={${env_vars}}" >/dev/null
     aws lambda wait function-active --function-name "$fn_name" --region "$REGION"

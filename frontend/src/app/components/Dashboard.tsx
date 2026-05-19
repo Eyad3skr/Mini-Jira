@@ -43,6 +43,10 @@ export default function Dashboard({ user }: DashboardProps) {
       toast.error('Title, assignee, and project are required');
       return;
     }
+    if (!form.deadline.trim()) {
+      toast.error('Date is required');
+      return;
+    }
     if (imageFile) {
       const imageErr = validateTaskImageFile(imageFile);
       if (imageErr) {

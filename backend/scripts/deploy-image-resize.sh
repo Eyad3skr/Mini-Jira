@@ -69,7 +69,7 @@ if aws lambda get-function --function-name "$FUNCTION_NAME" --region "$REGION" >
   aws lambda update-function-configuration \
     --function-name "$FUNCTION_NAME" \
     --region "$REGION" \
-    --runtime nodejs20.x \
+    --runtime nodejs22.x \
     --handler index.handler \
     --timeout 30 \
     --memory-size 512 \
@@ -79,7 +79,7 @@ else
   aws lambda create-function \
     --function-name "$FUNCTION_NAME" \
     --region "$REGION" \
-    --runtime nodejs20.x \
+    --runtime nodejs22.x \
     --role "$ROLE_ARN" \
     --handler index.handler \
     --zip-file "fileb://$ZIP_PATH" \
