@@ -29,7 +29,7 @@ Deploy AWS resources manually or via your preferred IaC tool. Required component
 ## Monitoring
 
 - CloudWatch custom namespace `MiniJira`
-- Dashboard: tasks created/closed, time-to-close, EC2 CPU
+- Dashboard: tasks created/closed, average time-to-close (`TimeToCloseHours`), EC2 CPU (ASG)
 - Alarm: overdue tasks threshold → SNS
 
 ## EC2 Environment Variables

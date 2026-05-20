@@ -11,7 +11,7 @@ import { authMiddleware, requireRole } from '../middleware/auth.js';
 import { assertTaskAccess, canAccessTeam, canUpdateTaskStatus } from '../middleware/teamAccess.js';
 import { publishTaskAssignment } from '../services/events.js';
 import { getUploadPresignedUrl } from '../services/s3.js';
-import { putMetric } from '../services/metrics.js';
+import { putMetric, recordTimeToClose } from '../services/metrics.js';
 import type { Task, TaskPriority, TaskStatus } from '../types.js';
 import { routeParam } from '../utils/routeParam.js';
 import { VALID_PRIORITIES, VALID_STATUSES } from '../types.js';
@@ -152,6 +152,7 @@ router.patch('/:id', authMiddleware, async (req, res) => {
       updates.status = toStatus;
       if (toStatus === 'done') {
         await putMetric('TasksClosed', 1, { TeamId: task.teamId });
+        await recordTimeToClose(task.teamId, task.createdAt, changedAt);
       }
     }
   }
@@ -188,6 +189,7 @@ router.post('/:id/status', authMiddleware, async (req, res) => {
     });
     if (status === 'done') {
       await putMetric('TasksClosed', 1, { TeamId: task.teamId });
+      await recordTimeToClose(task.teamId, task.createdAt, changedAt);
     }
   }
 
