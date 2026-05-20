@@ -16,12 +16,14 @@ Sign in with **AWS Cognito**. Demo accounts (configured in the user pool):
 
 Team boundaries are enforced on the API (`assertTaskAccess`, DynamoDB GSI on `teamId`). Local development uses mock login — see below.
 
-## Documentation
+## Architecture
+
+![Production topology](docs/architecture-diagram.svg)
 
 | Document | Description |
 |----------|-------------|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data model, monitoring |
-| [docs/architecture-diagram.svg](docs/architecture-diagram.svg) | Network and service topology |
+| [docs/architecture-diagram.svg](docs/architecture-diagram.svg) | Topology (SVG source) |
 | [docs/ARCHITECTURE-DIAGRAM.md](docs/ARCHITECTURE-DIAGRAM.md) | Formal diagram (AWS Architecture Icons) |
 | [infrastructure/AWS-DEPLOYMENT.md](infrastructure/AWS-DEPLOYMENT.md) | Deployment checklist and resource IDs |
 | [infrastructure/VPC-PRIVATE-EC2-MIGRATION.md](infrastructure/VPC-PRIVATE-EC2-MIGRATION.md) | VPC layout and private EC2 runbook |

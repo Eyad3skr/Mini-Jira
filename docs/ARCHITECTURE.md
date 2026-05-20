@@ -9,6 +9,8 @@ Mini-Jira is a team task-management app on AWS: React (Vite) via CloudFront, Exp
 
 ## Diagrams
 
+![Production topology](./architecture-diagram.svg)
+
 | Document | Content |
 |----------|---------|
 | [architecture-diagram.svg](./architecture-diagram.svg) | 2-AZ VPC topology (public ALB/NAT, private EC2) |
