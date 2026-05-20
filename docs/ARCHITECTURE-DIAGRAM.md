@@ -1,41 +1,37 @@
-# Architecture diagram (course deliverable)
+# Architecture diagrams
 
-## In this repo
+## Repository files
 
-| File | Purpose |
-|------|---------|
-| [architecture-diagram.svg](./architecture-diagram.svg) | Topology reference (2 AZ, public/private subnets, services). **Not** AWS official icons. |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Mermaid flow + data model |
+| File | Description |
+|------|-------------|
+| [architecture-diagram.svg](./architecture-diagram.svg) | Logical topology — 2 AZ, public/private subnets, core services |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Mermaid service flow and data model |
 
-## Graded submission (TODO)
+## Formal diagram (AWS Architecture Icons)
 
-The course requires a diagram drawn with [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/) (Lucidchart, draw.io, or PowerPoint), showing **all services** from the project PDF across **two Availability Zones**.
+For documentation that uses official icons, export from [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/) (draw.io, Lucidchart, or similar) and add:
 
-**Export and commit** one of:
-
-- `docs/architecture-diagram.png`
+- `docs/architecture-diagram.png`, or
 - `docs/architecture-diagram.pdf`
 
-Then update the link in the root [README.md](../README.md) to point at that file.
+### Recommended components
 
-### Must include
+| Layer | Include |
+|-------|---------|
+| Edge | CloudFront → ALB (public subnets, both AZs) |
+| Compute | EC2 ASG in private subnets (no public IP); NAT for egress |
+| Identity | Cognito user pool |
+| Data | DynamoDB; S3 originals and resized; image-resize Lambda on PUT |
+| Events | SNS assignments → SQS → worker Lambda; EventBridge `cron(0 9 * * ? *)` → digest Lambda |
+| Observability | CloudWatch dashboard `MiniJira`, alarms → SNS |
 
-- **Edge:** CloudFront → ALB (public subnets, both AZs)
-- **Compute:** EC2 ASG in **private** subnets (no public IP); NAT for outbound
-- **Auth:** Cognito (browser + API validation)
-- **Data:** DynamoDB; S3 originals + resized; Lambda on S3 PUT
-- **Events:** SNS (assignments) → SQS → assignment worker Lambda; EventBridge `cron(0 9 * * ? *)` → daily digest Lambda → SNS digest
-- **Ops:** CloudWatch dashboard `MiniJira`, alarm → SNS `mini-jira-alarms`
-- **Network labels:** `mini-jira-public-1a/1b`, `mini-jira-private-1a/1b`, NAT 1a (and optional NAT 1b)
+### Production labels (eu-north-1)
 
-### Production IDs (for labels)
-
-| Item | Value |
-|------|--------|
-| Region | `eu-north-1` |
+| Resource | Identifier |
+|----------|------------|
 | CloudFront | `E19LM6JGGQ56CX` |
-| Public URL | `https://d2nnx11y19xl0z.cloudfront.net` |
 | VPC | `mini-jira-vpc` (`vpc-0839ece58c89264ca`) |
 | ASG | `mini-jira-asg` |
+| Public URL | `https://d2nnx11y19xl0z.cloudfront.net` |
 
-Detailed VPC steps: [../infrastructure/VPC-PRIVATE-EC2-MIGRATION.md](../infrastructure/VPC-PRIVATE-EC2-MIGRATION.md).
+VPC details: [../infrastructure/VPC-PRIVATE-EC2-MIGRATION.md](../infrastructure/VPC-PRIVATE-EC2-MIGRATION.md).

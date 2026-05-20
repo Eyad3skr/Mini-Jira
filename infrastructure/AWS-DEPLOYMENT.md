@@ -1,117 +1,112 @@
-# Mini-Jira — AWS deployment checklist
+# AWS deployment
 
-**Status:** Deployed in **`eu-north-1`** (account `452031276830`).  
-**Submission URL:** [https://d2nnx11y19xl0z.cloudfront.net](https://d2nnx11y19xl0z.cloudfront.net)  
-**Deadline:** 22 May 2026, 11:59 PM — **stop** instances when idle; **do not terminate** graded resources.
+**Environment:** `eu-north-1` (account `452031276830`)  
+**Application URL:** [https://d2nnx11y19xl0z.cloudfront.net](https://d2nnx11y19xl0z.cloudfront.net)
 
-| Doc | Use |
-|-----|-----|
-| [../README.md](../README.md) | Entry point, demo users, **production deploy** (EC2 + SSM) |
-| [README.md](./README.md) | Deployed resource names |
-| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Topology + monitoring |
-| [VPC-PRIVATE-EC2-MIGRATION.md](./VPC-PRIVATE-EC2-MIGRATION.md) | Private EC2 + NAT (done) |
-| [../docs/COURSE-REQUIREMENTS.md](../docs/COURSE-REQUIREMENTS.md) | Course PDF requirements |
+| Document | Purpose |
+|----------|---------|
+| [../README.md](../README.md) | Operations — frontend/backend deploy on EC2 |
+| [README.md](./README.md) | Resource names and monitoring |
+| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Architecture overview |
+| [VPC-PRIVATE-EC2-MIGRATION.md](./VPC-PRIVATE-EC2-MIGRATION.md) | Private EC2 and NAT |
 
 ---
 
-## Phase 0 — Account & IAM
+## Phase 0 — Account and IAM
 
-| Step | Action | Status |
-|------|--------|--------|
-| 1 | MFA on root; daily ops via IAM admin (not root) | Done |
-| 2 | Region **`eu-north-1`** documented | Done |
-| 3 | Billing alarm | Done (verify threshold) |
-| 4 | Admin IAM user + MFA | Done |
-| 5 | Teammate IAM users (ReadOnly / limited PowerUser) | Per team |
-| 6 | Shared doc for ARNs — **no secrets in Git** | Ongoing |
-
----
-
-## Phase 1 — Data & auth
-
-| Step | Action | Status |
-|------|--------|--------|
-| 7 | DynamoDB tables (`npm run create-tables`), optional seed | Done |
-| 8 | Cognito pool `eu-north-1_0DPcA2AgE`, client `282sshpei1b1ujuar9a3svofq3`, `custom:role` / `custom:teamId`, demo users | Done |
-| 9 | Production env: `DEV_AUTH=false`, frontend `VITE_DEV_MOCK_LOGIN=false`, Cognito redirect = CloudFront URL | Done |
+| Step | Action |
+|------|--------|
+| 1 | MFA on root; daily operations via IAM admin |
+| 2 | Single region: `eu-north-1` |
+| 3 | Billing alarm |
+| 4 | Admin IAM user with MFA |
+| 5 | Team IAM users (ReadOnly by default) |
+| 6 | Operational runbook for ARNs — no secrets in Git |
 
 ---
 
-## Phase 2 — Storage & events
+## Phase 1 — Data and authentication
 
-| Step | Action | Status |
-|------|--------|--------|
-| 10 | S3 originals + resized buckets | Done |
-| 11 | SNS `mini-jira-task-assignments` + email subscription | Done |
-| 12 | SQS subscribed to SNS | Done |
-| 13 | Lambdas: `mini-jira-image-resize`, `mini-jira-assignment-worker`, `mini-jira-daily-digest` | Done |
-
----
-
-## Phase 3 — Network & compute
-
-| Step | Action | Status |
-|------|--------|--------|
-| 14 | VPC `mini-jira-vpc`: 2 **public** (ALB + NAT), 2 **private** (EC2), NAT outbound — [VPC-PRIVATE-EC2-MIGRATION.md](./VPC-PRIVATE-EC2-MIGRATION.md) | **Done** |
-| 15 | SG: ALB 80/443 from internet; EC2 app port only from ALB SG | Done |
-| 16 | EC2 AMI + launch template `asg-template` v5 (no public IP, pm2, IAM profile) | Done |
-| 17 | Target group health `/health` | Done |
-| 18 | ALB `mini-jira-alb-1713441418.eu-north-1.elb.amazonaws.com` | Done |
-| 19 | ASG `mini-jira-asg` min **2**, **2 AZ** | Done |
-| 20 | Frontend built on EC2 → nginx `/var/www/mini-jira/` | Done |
-| 21 | CloudFront `E19LM6JGGQ56CX` → ALB | Done |
-
-> **Historical note:** Early setups sometimes placed EC2 in public subnets only. Production uses **private EC2 + NAT** as required by the course VPC row.
+| Step | Action |
+|------|--------|
+| 7 | DynamoDB tables (`npm run create-tables`), optional seed |
+| 8 | Cognito pool `eu-north-1_0DPcA2AgE`, client `282sshpei1b1ujuar9a3svofq3`, attributes `custom:role`, `custom:teamId` |
+| 9 | Production: `DEV_AUTH=false`, `VITE_DEV_MOCK_LOGIN=false`, Cognito callbacks = CloudFront URL |
 
 ---
 
-## Phase 4 — Wire app to AWS
+## Phase 2 — Storage and events
 
-| Step | Action | Status |
-|------|--------|--------|
-| 22 | EC2 env: no `DYNAMODB_ENDPOINT`; real Cognito/S3/SNS; `EVENTS_ENABLED=true` | Done |
-| 23 | Frontend `.env` on EC2: CloudFront URLs, mock login off | Done |
-| 24 | Instance profile `mini-jira-ec2-role` (DynamoDB, S3, SNS, CloudWatch, SSM) | Done |
-| 25 | E2E: Cognito login, Ali/Sara/Omar demo, assign → SNS/SQS, image → resize, Done → metrics | Done |
-
----
-
-## Phase 5 — Monitoring & deliverables
-
-| Step | Action | Status |
-|------|--------|--------|
-| 26 | Dashboard `MiniJira` — [cloudwatch-dashboard.json](./cloudwatch-dashboard.json) (`TimeToCloseHours`, ASG CPU) | Done |
-| 27 | Alarm `mini-jira-tasks-created-activity` → SNS `mini-jira-alarms` | Done |
-| 28 | Architecture diagram with **AWS icons** in repo | **TODO** — [../docs/ARCHITECTURE-DIAGRAM.md](../docs/ARCHITECTURE-DIAGRAM.md) |
-| 29 | README + public URL | Done |
-| 30 | Demo video + Google Form | **TODO** (you) |
+| Step | Action |
+|------|--------|
+| 10 | S3 originals and resized buckets |
+| 11 | SNS `mini-jira-task-assignments` and email subscriptions |
+| 12 | SQS subscribed to SNS |
+| 13 | Lambdas: `mini-jira-image-resize`, `mini-jira-assignment-worker`, `mini-jira-daily-digest` |
 
 ---
 
-## Production deploy (quick reference)
+## Phase 3 — Network and compute
 
-Details in [../README.md#production-operations](../README.md#production-operations).
+| Step | Action |
+|------|--------|
+| 14 | VPC `mini-jira-vpc`: public subnets (ALB, NAT), private subnets (EC2) — [VPC-PRIVATE-EC2-MIGRATION.md](./VPC-PRIVATE-EC2-MIGRATION.md) |
+| 15 | Security groups: ALB 80/443 from internet; EC2 application ports from ALB only |
+| 16 | Launch template `asg-template` v5 — no public IP, pm2, IAM instance profile |
+| 17 | Target group health check `/health` |
+| 18 | ALB `mini-jira-alb-1713441418.eu-north-1.elb.amazonaws.com` |
+| 19 | ASG `mini-jira-asg` — minimum 2 instances, 2 AZs |
+| 20 | Frontend built on EC2, served from `/var/www/mini-jira/` |
+| 21 | CloudFront `E19LM6JGGQ56CX` → ALB |
 
-1. **Frontend:** SSM to EC2 → `git pull` → build with prod `frontend/.env` → `rsync` to `/var/www/mini-jira/` → CloudFront invalidation `E19LM6JGGQ56CX` `/*`
-2. **Backend:** both instances → `git pull` → `cd backend && npm ci && npm run build` → `pm2 restart mini-jira-api`
-3. **Never** rsync Mac `frontend/dist/` with dev mock login enabled
+Production uses **private EC2** with NAT egress (not EC2 in public subnets).
 
 ---
 
-## Minimum viable order (reference)
+## Phase 4 — Application integration
 
-For a fresh build: Phase 0 → 7–8 → 16–18 → 21 → 10–13 → 19, 14, 26–27 → 28–30.
+| Step | Action |
+|------|--------|
+| 22 | EC2 environment: no `DYNAMODB_ENDPOINT`; Cognito, S3, SNS; `EVENTS_ENABLED=true` |
+| 23 | Frontend `.env` on EC2 aligned with CloudFront |
+| 24 | Instance profile `mini-jira-ec2-role` (DynamoDB, S3, SNS, CloudWatch, SSM) |
+| 25 | End-to-end validation: auth, RBAC demo users, assignments, image pipeline, metrics |
 
 ---
 
-## Team access
+## Phase 5 — Observability
 
-| Who | Access |
-|-----|--------|
-| Lead | IAM admin + MFA |
-| Most teammates | `ReadOnlyAccess` |
-| Optional helpers | `PowerUserAccess` during deploy windows |
-| Nobody | Root for daily ops, secrets in GitHub |
+| Step | Action |
+|------|--------|
+| 26 | Dashboard `MiniJira` — [cloudwatch-dashboard.json](./cloudwatch-dashboard.json) |
+| 27 | Alarm `mini-jira-tasks-created-activity` → SNS `mini-jira-alarms` |
+| 28 | Architecture diagram in `docs/` — [ARCHITECTURE-DIAGRAM.md](../docs/ARCHITECTURE-DIAGRAM.md) |
+
+---
+
+## Deploy commands (summary)
+
+See [../README.md](../README.md#production-operations).
+
+1. **Frontend:** SSM → `git pull` → build with production `frontend/.env` → sync to `/var/www/mini-jira/` → CloudFront invalidation `E19LM6JGGQ56CX` on `/*`
+2. **Backend:** both instances → `git pull` → `npm ci` + `npm run build` → `pm2 restart mini-jira-api`
+
+---
+
+## Bootstrap order (new environment)
+
+Phase 0 → 7–8 → 16–18 → 21 → 10–13 → 19, 14 → 26–27 → 28
+
+---
+
+## Access model
+
+| Principal | Access |
+|-----------|--------|
+| Platform lead | IAM admin + MFA |
+| Engineers | `ReadOnlyAccess` default |
+| Deploy helpers | `PowerUserAccess` when needed |
+| — | No root for routine work; no credentials in the repository |
 
 ---
 
@@ -119,7 +114,7 @@ For a fresh build: Phase 0 → 7–8 → 16–18 → 21 → 10–13 → 19, 14, 
 
 | | Local | AWS |
 |---|--------|-----|
-| Database | DynamoDB Local | AWS DynamoDB |
-| Auth | `DEV_AUTH=true`, mock login | Cognito |
-| Metrics | May warn without creds | EC2/Lambda IAM |
-| Events | `EVENTS_ENABLED=false` | `true` + SNS ARN |
+| Database | DynamoDB Local | DynamoDB |
+| Auth | Mock / `DEV_AUTH` | Cognito |
+| Metrics | Optional local warnings | IAM on EC2 and Lambda |
+| Events | `EVENTS_ENABLED=false` | `true` with SNS ARNs |

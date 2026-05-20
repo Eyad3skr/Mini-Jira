@@ -13,7 +13,7 @@
     </style>
   </defs>
   <text x="20" y="28" class="title">Mini-Jira  Production topology (eu-north-1, 2 AZ)</text>
-  <text x="20" y="48" class="note">Graded submission: replace with AWS Architecture Icons (Lucidchart/draw.io). See docs/ARCHITECTURE-DIAGRAM.md</text>
+  <text x="20" y="48" class="note">Logical topology — see docs/ARCHITECTURE-DIAGRAM.md for AWS Architecture Icons export</text>
 
   <!-- Users -->
   <rect x="420" y="60" width="120" height="40" class="box"/>

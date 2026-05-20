@@ -12,7 +12,7 @@ Mini-Jira is a team task-management app on AWS: React (Vite) via CloudFront, Exp
 | Document | Content |
 |----------|---------|
 | [architecture-diagram.svg](./architecture-diagram.svg) | 2-AZ VPC topology (public ALB/NAT, private EC2) |
-| [ARCHITECTURE-DIAGRAM.md](./ARCHITECTURE-DIAGRAM.md) | Graded AWS-icon diagram instructions |
+| [ARCHITECTURE-DIAGRAM.md](./ARCHITECTURE-DIAGRAM.md) | Formal diagram guidelines (AWS icons) |
 | Mermaid below | Service relationships |
 
 ## Network (deployed)
@@ -136,6 +136,5 @@ Use dev login when `DEV_AUTH=true` / `VITE_DEV_MOCK_LOGIN=true`.
 
 ## Related docs
 
-- [COURSE-REQUIREMENTS.md](./COURSE-REQUIREMENTS.md)
 - [../infrastructure/AWS-DEPLOYMENT.md](../infrastructure/AWS-DEPLOYMENT.md)
-- [../README.md](../README.md) — production deploy steps
+- [../README.md](../README.md)

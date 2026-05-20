@@ -1,7 +1,6 @@
-# Mini-Jira on AWS — course requirements
+# Project specification (reference)
 
-Canonical copy of the professor’s project brief (Cloud Computing 2026).  
-**Deadline:** 22 May 2026, 11:59 PM
+Original project brief — functional and AWS requirements.
 
 ---
 

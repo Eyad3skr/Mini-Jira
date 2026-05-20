@@ -1,12 +1,12 @@
 # VPC migration: public ALB + private EC2 + NAT
 
-**Status (May 2026):** Migration **completed** for `mini-jira-vpc`. EC2 runs in private subnets with no public IPs; admin via **SSM Session Manager**. NAT 1a (`nat-085b0e523088ab428`) serves both private subnets; NAT 1b (`nat-064ae60a9ebddb766`) exists for optional per-AZ routing ([Option B](#option-b--nat-per-az-stronger-diagram) below).
+**Status:** Migration **completed** for `mini-jira-vpc`. EC2 runs in private subnets with no public IPs; admin via **SSM Session Manager**. NAT 1a (`nat-085b0e523088ab428`) serves both private subnets; NAT 1b (`nat-064ae60a9ebddb766`) exists for optional per-AZ routing ([Option B](#option-b--nat-per-az-stronger-diagram) below).
 
 Use this document as a **runbook** for rebuild/rollback or another environment — not as “EC2 still in public subnets only.”
 
 ---
 
-Target architecture (course requirement):
+Target architecture:
 
 ```text
 Internet
@@ -387,15 +387,15 @@ Pick one:
 
 ---
 
-## Phase 10 — Update course diagram / README
+## Phase 10 — Update architecture documentation
 
-Label clearly:
+Document in [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) and your formal diagram:
 
 - **Public subnets:** ALB + NAT (+ optional bastion)
 - **Private subnets:** ASG / EC2
-- **NAT:** outbound path for JWT (Cognito), S3, SNS, DynamoDB
+- **NAT:** outbound path for Cognito, S3, SNS, DynamoDB
 
-Submission URL unchanged: `https://d2nnx11y19xl0z.cloudfront.net`
+Application URL: `https://d2nnx11y19xl0z.cloudfront.net`
 
 ---
 
