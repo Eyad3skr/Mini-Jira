@@ -13,6 +13,7 @@ import RadialNav from './components/RadialNav';
 import ProjectsView from './components/ProjectsView';
 import TeamsView from './components/TeamsView';
 import AnalyticsView from './components/AnalyticsView';
+import SystemFooter from './components/SystemFooter';
 
 export type { User, UserRole } from '../lib/types';
 
@@ -104,17 +105,7 @@ export default function App() {
             {currentView === 'analytics' && <AnalyticsView user={user} />}
           </main>
         </div>
-        <footer className="border-t-2 border-primary px-6 py-2 flex items-center justify-between text-sm bg-background z-10">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-primary" />
-              <span>SYSTEM READY</span>
-            </div>
-            <div>CPU: 23%</div>
-            <div>MEM: 1.2GB</div>
-          </div>
-          <div>{new Date().toISOString().split('T')[0]} {new Date().toLocaleTimeString('en-US', { hour12: false })}</div>
-        </footer>
+        <SystemFooter />
       </div>
       <Toaster position="top-right" theme="dark" richColors />
     </DndProvider>

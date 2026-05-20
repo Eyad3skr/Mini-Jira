@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 import { Filter, Plus } from 'lucide-react';
 import { apiFetch, ApiError } from '../../lib/api';
 import { uploadTaskImage, validateTaskImageFile, waitForTaskImage } from '../../lib/taskImage';
-import type { Project, Task, TaskPriority, User, UserProfile } from '../../lib/types';
+import { fetchPickableTeams } from '../../lib/teams';
+import type { Project, Task, TaskPriority, Team, User, UserProfile } from '../../lib/types';
 import KanbanBoard from './KanbanBoard';
 
 interface DashboardProps {
@@ -15,28 +16,47 @@ export default function Dashboard({ user }: DashboardProps) {
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<UserProfile[]>([]);
+  const [pickableTeams, setPickableTeams] = useState<Team[]>([]);
   const [form, setForm] = useState({
     title: '',
     description: '',
     priority: 'medium' as TaskPriority,
     deadline: '',
     assigneeId: '',
-    teamId: 'frontend',
+    teamId: '',
     projectId: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const teams = user.role === 'manager'
-    ? ['all', 'frontend', 'backend', 'qa', 'devops']
-    : [user.teamId];
+  const isManager = user.role === 'manager' || user.role === 'admin';
 
   useEffect(() => {
-    if (user.role !== 'manager') return;
+    if (!isManager) return;
+    fetchPickableTeams()
+      .then((teams) => {
+        setPickableTeams(teams);
+        setForm((f) => ({
+          ...f,
+          teamId: f.teamId && teams.some((t) => t.teamId === f.teamId) ? f.teamId : (teams[0]?.teamId ?? ''),
+        }));
+      })
+      .catch(() => toast.error('Could not load teams'));
     apiFetch<Project[]>('/api/projects').then(setProjects).catch(() => {});
     apiFetch<UserProfile[]>('/api/users').then(setEmployees).catch(() => {});
-  }, [user.role]);
+  }, [isManager]);
+
+  useEffect(() => {
+    if (!showCreateTask || !isManager) return;
+    fetchPickableTeams()
+      .then(setPickableTeams)
+      .catch(() => {});
+  }, [showCreateTask, isManager]);
+
+  const filterTeams: { teamId: string; label: string }[] = isManager
+    ? [{ teamId: 'all', label: 'ALL_TEAMS' }, ...pickableTeams.map((t) => ({ teamId: t.teamId, label: t.name }))]
+    : [{ teamId: user.teamId, label: user.teamName || user.teamId.toUpperCase() }];
 
   const handleCreate = async () => {
     if (!form.title || !form.assigneeId || !form.projectId) {
@@ -69,7 +89,15 @@ export default function Dashboard({ user }: DashboardProps) {
       toast.success(imageFile ? 'Task created with image' : 'Task created');
       setShowCreateTask(false);
       setImageFile(null);
-      setForm({ title: '', description: '', priority: 'medium', deadline: '', assigneeId: '', teamId: 'frontend', projectId: '' });
+      setForm({
+        title: '',
+        description: '',
+        priority: 'medium',
+        deadline: '',
+        assigneeId: '',
+        teamId: pickableTeams[0]?.teamId ?? '',
+        projectId: '',
+      });
       setRefreshKey((k) => k + 1);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Failed to create task');
@@ -90,7 +118,7 @@ export default function Dashboard({ user }: DashboardProps) {
               {user.role === 'manager' ? 'MANAGER VIEW - ALL TEAMS VISIBLE' : `EMPLOYEE VIEW - ${user.teamName} ONLY`}
             </div>
           </div>
-          {user.role === 'manager' && (
+          {isManager && (
             <button
               onClick={() => setShowCreateTask(true)}
               className="border-2 border-accent px-6 py-3 flex items-center gap-2 hover:bg-accent hover:text-accent-foreground transition-colors"
@@ -100,7 +128,7 @@ export default function Dashboard({ user }: DashboardProps) {
             </button>
           )}
         </div>
-        {user.role === 'manager' && (
+        {isManager && (
           <div className="border-2 border-primary/30 p-4 bg-card">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-sm">
@@ -108,17 +136,17 @@ export default function Dashboard({ user }: DashboardProps) {
                 <span>FILTER:</span>
               </div>
               <div className="flex gap-2 flex-wrap">
-                {teams.map((team) => (
+                {filterTeams.map((team) => (
                   <button
-                    key={team}
-                    onClick={() => setSelectedTeam(team)}
+                    key={team.teamId}
+                    onClick={() => setSelectedTeam(team.teamId)}
                     className={`px-4 py-2 border-2 text-sm transition-all ${
-                      selectedTeam === team
+                      selectedTeam === team.teamId
                         ? 'border-accent bg-accent text-accent-foreground'
                         : 'border-primary/50 hover:border-primary hover:bg-primary/10'
                     }`}
                   >
-                    {team === 'all' ? 'ALL_TEAMS' : team.toUpperCase()}
+                    {team.label}
                   </button>
                 ))}
               </div>
@@ -151,16 +179,24 @@ export default function Dashboard({ user }: DashboardProps) {
                   <option key={p.projectId} value={p.projectId}>{p.name}</option>
                 ))}
               </select>
-              <select className="w-full border-2 border-primary/50 bg-background px-3 py-2" value={form.teamId} onChange={(e) => setForm({ ...form, teamId: e.target.value, assigneeId: '' })}>
-                <option value="frontend">FRONTEND</option>
-                <option value="backend">BACKEND</option>
-                <option value="qa">QA</option>
-                <option value="devops">DEVOPS</option>
+              <select
+                className="w-full border-2 border-primary/50 bg-background px-3 py-2"
+                value={form.teamId}
+                onChange={(e) => setForm({ ...form, teamId: e.target.value, assigneeId: '' })}
+              >
+                <option value="">{pickableTeams.length ? 'SELECT TEAM' : 'NO TEAMS — CREATE ONE IN TEAMS'}</option>
+                {pickableTeams.map((t) => (
+                  <option key={t.teamId} value={t.teamId}>
+                    {t.name}
+                  </option>
+                ))}
               </select>
               <select className="w-full border-2 border-primary/50 bg-background px-3 py-2" value={form.assigneeId} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
                 <option value="">SELECT ASSIGNEE</option>
                 {teamEmployees.map((e) => (
-                  <option key={e.userId} value={e.userId}>{e.name}</option>
+                  <option key={e.userId} value={e.userId}>
+                    {e.name?.trim() || e.email}
+                  </option>
                 ))}
               </select>
               <div>

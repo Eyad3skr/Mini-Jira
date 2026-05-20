@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { toast } from 'sonner';
-import { apiFetch } from '../../lib/api';
 import { completeOnboarding, isOidcConfigured } from '../../lib/auth';
-import type { TeamOption, User } from '../../lib/types';
+import { fetchPickableTeams } from '../../lib/teams';
+import type { User } from '../../lib/types';
 import LoginShell from './LoginShell';
 
 interface OnboardingScreenProps {
@@ -19,14 +19,13 @@ export default function OnboardingScreen({ user, onComplete }: OnboardingScreenP
       : user.email;
   const [name, setName] = useState('');
   const [teamId, setTeamId] = useState('');
-  const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [teams, setTeams] = useState<{ teamId: string; name: string }[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    apiFetch<TeamOption[]>('/api/teams')
-      .then((list) => {
-        const pickable = list.filter((t) => t.teamId !== 'all');
+    fetchPickableTeams()
+      .then((pickable) => {
         setTeams(pickable);
         if (pickable.length === 1) setTeamId(pickable[0].teamId);
       })

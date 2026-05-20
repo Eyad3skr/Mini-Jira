@@ -60,12 +60,15 @@ export interface Team {
   createdAt: string;
 }
 
+/** DynamoDB user row (from /api/users for managers). */
 export interface UserProfile {
   userId: string;
   email: string;
-  name: string;
+  name?: string;
   role: UserRole;
-  teamId: string;
+  teamId?: string;
+  createdAt?: string;
+  onboardingComplete?: boolean;
 }
 
 export interface AuditEntry {

@@ -53,4 +53,6 @@ cd backend && npm ci && npm run build
 pm2 start dist/index.js --name mini-jira-api
 ```
 
-Serve frontend static build from same instance or S3+CloudFront for static assets.
+Serve frontend static build from nginx on EC2 (`/var/www/mini-jira`) behind CloudFront.
+
+**Frontend deploy (build on EC2, not from laptop `dist/`):** see [Deploy frontend to production](../README.md#deploy-frontend-to-production-ec2--cloudfront) in the root README.
