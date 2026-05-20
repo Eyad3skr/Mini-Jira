@@ -1,8 +1,33 @@
 import * as teamsRepo from '../db/repositories/teams.js';
 import * as usersRepo from '../db/repositories/users.js';
 import type { UserProfile } from '../types.js';
+import { getCognitoUserEmail } from './cognitoEmail.js';
 
 const PICKABLE_TEAM_BLOCKLIST = new Set(['all']);
+
+function isPlaceholderEmail(email: string, userId: string): boolean {
+  const e = email.trim().toLowerCase();
+  return e.endsWith('@users.local') || e === `${userId.toLowerCase()}@users.local`;
+}
+
+function pickEmail(userId: string, ...candidates: (string | undefined)[]): string {
+  for (const c of candidates) {
+    const e = c?.trim();
+    if (e && !isPlaceholderEmail(e, userId)) return e;
+  }
+  return `${userId}@users.local`;
+}
+
+async function resolveEmail(
+  userId: string,
+  hints: { email?: string } = {}
+): Promise<string> {
+  const hint = hints.email?.trim();
+  if (hint && !isPlaceholderEmail(hint, userId)) return hint;
+  const fromCognito = await getCognitoUserEmail(userId);
+  if (fromCognito && !isPlaceholderEmail(fromCognito, userId)) return fromCognito;
+  return pickEmail(userId, hints.email);
+}
 
 export function profileNeedsOnboarding(profile: UserProfile): boolean {
   if (profile.onboardingComplete === true) return false;
@@ -18,23 +43,30 @@ export async function ensureUserProfile(
 ): Promise<UserProfile> {
   const existing = await usersRepo.getUser(userId);
   if (existing) {
+    const email = await resolveEmail(userId, {
+      email: hints.email && !isPlaceholderEmail(hints.email, userId) ? hints.email : existing.email,
+    });
+    const needsEmailRepair = existing.email !== email;
     // Repair rows written before empty GSI keys were stripped (DynamoDB rejects "")
     if (
+      needsEmailRepair ||
       (existing.teamId !== undefined && !existing.teamId.trim()) ||
       (existing.name !== undefined && !existing.name.trim())
     ) {
       const { teamId: _t, name: _n, ...rest } = existing;
       const repaired: UserProfile = {
         ...rest,
+        email,
         ...(existing.teamId?.trim() ? { teamId: existing.teamId } : {}),
         ...(existing.name?.trim() ? { name: existing.name } : {}),
+        ...(hints.name?.trim() ? { name: hints.name.trim() } : {}),
       };
       return usersRepo.upsertUser(repaired);
     }
     return existing;
   }
 
-  const email = hints.email?.trim() || `${userId}@users.local`;
+  const email = await resolveEmail(userId, hints);
 
   const profile: UserProfile = {
     userId,
@@ -49,7 +81,7 @@ export async function ensureUserProfile(
 
 export async function completeUserOnboarding(
   userId: string,
-  data: { name: string; teamId: string }
+  data: { name: string; teamId: string; email?: string }
 ): Promise<UserProfile> {
   const name = data.name.trim();
   const teamId = data.teamId.trim();
@@ -67,7 +99,7 @@ export async function completeUserOnboarding(
   }
 
   const existing = await usersRepo.getUser(userId);
-  const email = existing?.email ?? `${userId}@users.local`;
+  const email = await resolveEmail(userId, { email: pickEmail(userId, data.email, existing?.email) });
 
   return usersRepo.upsertUser({
     userId,

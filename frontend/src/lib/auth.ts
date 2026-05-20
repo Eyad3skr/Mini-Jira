@@ -100,18 +100,31 @@ function meToUser(me: {
   };
 }
 
-export async function fetchMe(): Promise<User> {
-  const me = await apiFetch<Parameters<typeof meToUser>[0]>('/api/me');
+export async function fetchMe(cognitoEmail?: string): Promise<User> {
+  const headers: Record<string, string> = {};
+  const email = cognitoEmail?.trim() || getStoredUser()?.email?.trim();
+  if (email && !email.endsWith('@users.local')) {
+    headers['X-Profile-Email'] = email;
+  }
+  const me = await apiFetch<Parameters<typeof meToUser>[0]>('/api/me', { headers });
   const user = meToUser(me);
   const token = getToken();
   if (token) setSession(token, user);
   return user;
 }
 
-export async function completeOnboarding(name: string, teamId: string): Promise<User> {
+export async function completeOnboarding(
+  name: string,
+  teamId: string,
+  email?: string
+): Promise<User> {
   const me = await apiFetch<Parameters<typeof meToUser>[0]>('/api/me/onboarding', {
     method: 'PUT',
-    body: JSON.stringify({ name: name.trim(), teamId }),
+    body: JSON.stringify({
+      name: name.trim(),
+      teamId,
+      ...(email?.trim() ? { email: email.trim() } : {}),
+    }),
   });
   const user = meToUser(me);
   const token = getToken();

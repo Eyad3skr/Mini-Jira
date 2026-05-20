@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from 'react-oidc-context';
 import { toast } from 'sonner';
 import { apiFetch } from '../../lib/api';
-import { completeOnboarding } from '../../lib/auth';
+import { completeOnboarding, isOidcConfigured } from '../../lib/auth';
 import type { TeamOption, User } from '../../lib/types';
 import LoginShell from './LoginShell';
 
@@ -11,6 +12,11 @@ interface OnboardingScreenProps {
 }
 
 export default function OnboardingScreen({ user, onComplete }: OnboardingScreenProps) {
+  const auth = useAuth();
+  const cognitoEmail =
+    isOidcConfigured() && auth.user?.profile?.email
+      ? String(auth.user.profile.email)
+      : user.email;
   const [name, setName] = useState('');
   const [teamId, setTeamId] = useState('');
   const [teams, setTeams] = useState<TeamOption[]>([]);
@@ -40,7 +46,7 @@ export default function OnboardingScreen({ user, onComplete }: OnboardingScreenP
     }
     setSubmitting(true);
     try {
-      const updated = await completeOnboarding(name, teamId);
+      const updated = await completeOnboarding(name, teamId, cognitoEmail);
       toast.success('Profile saved — welcome to Mini-Jira');
       onComplete(updated);
     } catch (err) {

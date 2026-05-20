@@ -13,12 +13,19 @@ export const handler = async (event) => {
     let payload;
     try {
       const body = JSON.parse(record.body);
-      payload = typeof body.Message === 'string' ? JSON.parse(body.Message) : body;
+      let inner = typeof body.Message === 'string' ? JSON.parse(body.Message) : body;
+      // SNS MessageStructure json: { default: "<payload json>", email: "..." }
+      if (inner?.default) {
+        inner =
+          typeof inner.default === 'string' ? JSON.parse(inner.default) : inner.default;
+      }
+      payload = inner;
     } catch {
       continue;
     }
 
-    const { taskId, assigneeId, teamId, title } = payload;
+    const { taskId, assigneeId, teamId, title } = payload ?? {};
+    if (!taskId || !assigneeId || !teamId) continue;
     const now = new Date();
     const date = now.toISOString().split('T')[0];
 

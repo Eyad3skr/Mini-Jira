@@ -8,6 +8,7 @@ export declare function ensureUserProfile(userId: string, hints?: {
 export declare function completeUserOnboarding(userId: string, data: {
     name: string;
     teamId: string;
+    email?: string;
 }): Promise<UserProfile>;
 export declare class OnboardingValidationError extends Error {
     constructor(message: string);

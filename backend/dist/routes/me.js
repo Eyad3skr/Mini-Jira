@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
+import { ensureAssigneeEmailSubscription } from '../services/snsAssignee.js';
 import { completeUserOnboarding, ensureUserProfile, OnboardingValidationError, toMeResponse, } from '../services/userProvisioning.js';
 const router = Router();
 router.get('/', authMiddleware, async (req, res) => {
     const user = req.user;
+    const profileEmail = req.headers['x-profile-email']?.trim();
     const profile = await ensureUserProfile(user.sub, {
-        email: user.email,
+        email: profileEmail || user.email,
         name: user.name,
     });
     res.json(toMeResponse(profile));
@@ -15,10 +17,13 @@ router.put('/onboarding', authMiddleware, async (req, res) => {
     const user = req.user;
     const { name, teamId } = req.body;
     try {
+        const body = req.body;
         const profile = await completeUserOnboarding(user.sub, {
             name: name ?? '',
             teamId: teamId ?? '',
+            email: body.email?.trim() || user.email,
         });
+        await ensureAssigneeEmailSubscription(profile.userId, profile.email);
         res.json(toMeResponse(profile));
     }
     catch (err) {

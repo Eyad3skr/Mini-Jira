@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { AuthenticatedRequest } from '../middleware/auth.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { ensureAssigneeEmailSubscription } from '../services/snsAssignee.js';
 import {
   completeUserOnboarding,
   ensureUserProfile,
@@ -12,8 +13,9 @@ const router = Router();
 
 router.get('/', authMiddleware, async (req, res) => {
   const user = (req as AuthenticatedRequest).user;
+  const profileEmail = (req.headers['x-profile-email'] as string | undefined)?.trim();
   const profile = await ensureUserProfile(user.sub, {
-    email: user.email,
+    email: profileEmail || user.email,
     name: user.name,
   });
   res.json(toMeResponse(profile));
@@ -25,10 +27,13 @@ router.put('/onboarding', authMiddleware, async (req, res) => {
   const { name, teamId } = req.body as { name?: string; teamId?: string };
 
   try {
+    const body = req.body as { name?: string; teamId?: string; email?: string };
     const profile = await completeUserOnboarding(user.sub, {
       name: name ?? '',
       teamId: teamId ?? '',
+      email: body.email?.trim() || user.email,
     });
+    await ensureAssigneeEmailSubscription(profile.userId, profile.email);
     res.json(toMeResponse(profile));
   } catch (err) {
     if (err instanceof OnboardingValidationError) {

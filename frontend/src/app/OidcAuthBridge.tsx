@@ -41,7 +41,7 @@ export default function OidcAuthBridge({ onAuthenticated }: OidcAuthBridgeProps)
         teamId: '',
         teamName: '',
       });
-      fetchMe()
+      fetchMe(auth.user.profile.email?.toString())
         .then(onAuthenticated)
         .catch((err) => {
           syncedRef.current = false;
