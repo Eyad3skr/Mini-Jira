@@ -82,6 +82,10 @@ sudo rsync -a --delete dist/ /var/www/mini-jira/
 aws cloudfront create-invalidation --distribution-id E19LM6JGGQ56CX --paths "/*"
 ```
 
+The EC2 instance role (`mini-jira-ec2-role`) needs `cloudfront:CreateInvalidation` on your distribution. If that command returns **AccessDenied**, either run it from your laptop with your IAM admin user (same AWS account), or attach the `mini-jira-cloudfront-invalidate` inline policy on the role (see `infrastructure/` notes).
+
 Repeat the `rsync` step on **both** ASG instances if they do not share `/var/www/mini-jira` (or build once and sync `dist/` to the peer). After invalidation completes (~1–2 minutes), hard refresh or use a private window at your CloudFront URL.
+
+**Note:** `git pull` on EC2 only updates what you pushed to GitHub. Commit and push from your machine first if the server says “Already up to date” but you expect new UI changes.
 
 Full stack checklist: [infrastructure/AWS-DEPLOYMENT.md](infrastructure/AWS-DEPLOYMENT.md).

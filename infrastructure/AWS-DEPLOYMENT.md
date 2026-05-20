@@ -58,7 +58,7 @@ One AWS account, you build everything, teammates get **IAM users** (not root). P
 
 | Step | Action |
 |------|--------|
-| 14 | **VPC** — default VPC OK for course, or custom: 2 public subnets (ALB), 2 private (EC2) + NAT (or EC2 in public subnets for simplicity — confirm with TA). |
+| 14 | **VPC** — 2 public subnets (ALB + NAT), 2 private subnets (EC2), NAT for outbound. **Step-by-step for current `mini-jira-vpc`:** [VPC-PRIVATE-EC2-MIGRATION.md](./VPC-PRIVATE-EC2-MIGRATION.md). (Simpler shortcut: EC2 in public subnets — confirm with TA.) |
 | 15 | **Security groups** — ALB: 80/443 from internet; EC2: app port (3001) **only from ALB SG**. |
 | 16 | **EC2** — Amazon Linux 2023, Node 20, clone repo, `cd backend && npm ci && npm run build`, production env file, `pm2 start dist/index.js`, health on `/health`. |
 | 17 | **Target group** — health check `/health`. |
