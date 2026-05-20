@@ -1,6 +1,6 @@
 {
-  "start": "-P3D",
-  "periodOverride": "inherit",
+  "start": "-P24H",
+  "periodOverride": "auto",
   "widgets": [
     {
       "type": "metric",
@@ -51,11 +51,12 @@
         "stacked": false,
         "region": "eu-north-1",
         "title": "Average Time to Close (hours)",
+        "liveData": true,
         "metrics": [
-          ["MiniJira", "TimeToCloseHours", "TeamId", "frontend"],
-          [".", ".", ".", "backend"]
+          ["MiniJira", "TimeToCloseHours", "TeamId", "frontend", { "stat": "Average", "period": 300, "label": "Frontend" }],
+          ["MiniJira", "TimeToCloseHours", "TeamId", "backend", { "stat": "Average", "period": 300, "label": "Backend" }]
         ],
-        "period": 86400,
+        "period": 300,
         "stat": "Average"
       }
     },

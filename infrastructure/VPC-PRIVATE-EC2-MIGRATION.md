@@ -1,5 +1,11 @@
 # VPC migration: public ALB + private EC2 + NAT
 
+**Status (May 2026):** Migration **completed** for `mini-jira-vpc`. EC2 runs in private subnets with no public IPs; admin via **SSM Session Manager**. NAT 1a (`nat-085b0e523088ab428`) serves both private subnets; NAT 1b (`nat-064ae60a9ebddb766`) exists for optional per-AZ routing ([Option B](#option-b--nat-per-az-stronger-diagram) below).
+
+Use this document as a **runbook** for rebuild/rollback or another environment — not as “EC2 still in public subnets only.”
+
+---
+
 Target architecture (course requirement):
 
 ```text
@@ -30,8 +36,12 @@ Internet
 | ALB SG | `sg-0a12014db2754d447` |
 | EC2 SG | `sg-086b2a0c91f9ce742` |
 | ASG | `mini-jira-asg` |
-| Launch template | `asg-template` |
+| Launch template | `asg-template` (default **v5**, no public IP) |
 | Target group | `mini-jira-api-tg` (port 80) |
+| Private subnet 1a | `mini-jira-private-1a` (`10.2.0.0/25`) |
+| Private subnet 1b | `mini-jira-private-1b` (`10.2.0.128/25`) |
+| NAT 1a (active route) | `nat-085b0e523088ab428` |
+| NAT 1b (optional HA) | `nat-064ae60a9ebddb766` |
 
 **Downtime:** ~15–30 minutes while ASG is scaled to 0 and back up in private subnets. CloudFront URL stays the same.
 
@@ -41,7 +51,7 @@ Internet
 
 ## Before you start
 
-1. **Snapshot mental model:** EC2 will **lose public IPs**. You cannot `ssh ec2-user@13.x.x.x` unless you add **SSM Session Manager** or a **bastion** in a public subnet.
+1. **Snapshot mental model:** EC2 will **lose public IPs**. Primary admin path: **SSM Session Manager** (`mini-jira-ec2-role` + `AmazonSSMManagedInstanceCore`). SSH to a public IP is not the documented ops path for private EC2.
 2. **Commit / backup** anything on instances you care about (`pm2 save`, golden AMI optional).
 3. **AWS CLI** configured with admin rights (not the EC2 instance role).
 4. Optional: set ASG **min/desired/max** to 0 during maintenance window.
@@ -183,7 +193,7 @@ Wait until `State` = `available`:
 aws ec2 describe-nat-gateways --region eu-north-1 --nat-gateway-ids $NAT_1A --query 'NatGateways[0].State'
 ```
 
-**Cost-saving alternative (course minimum):** one NAT in `1a` only; both private subnets use it (private hosts in `1b` lose outbound if `1a` AZ fails).
+**Cost-saving alternative (deployed):** one NAT in `1a` only; both private subnets use it via `mini-jira-private-rt` → `nat-085b0e523088ab428`. NAT 1b may exist but is optional unless you use per-AZ route tables (private hosts in `1b` lose outbound if `1a` AZ fails when using single-NAT routing).
 
 ---
 

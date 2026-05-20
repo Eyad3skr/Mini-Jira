@@ -16,20 +16,27 @@ export async function putMetric(
   if (config.nodeEnv === 'test') return;
 
   try {
+    const datum: {
+      MetricName: string;
+      Value: number;
+      Timestamp: Date;
+      Unit?: StandardUnit;
+      Dimensions?: { Name: string; Value: string }[];
+    } = {
+      MetricName: metricName,
+      Value: value,
+      Timestamp: new Date(),
+      Dimensions: dimensions
+        ? Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value }))
+        : undefined,
+    };
+    // CloudWatch dashboards graph custom metrics more reliably without Unit "None"
+    if (unit !== 'None') datum.Unit = unit;
+
     await cw.send(
       new PutMetricDataCommand({
         Namespace: config.cloudwatchNamespace,
-        MetricData: [
-          {
-            MetricName: metricName,
-            Value: value,
-            Unit: unit,
-            Timestamp: new Date(),
-            Dimensions: dimensions
-              ? Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value }))
-              : undefined,
-          },
-        ],
+        MetricData: [datum],
       })
     );
   } catch (err) {
