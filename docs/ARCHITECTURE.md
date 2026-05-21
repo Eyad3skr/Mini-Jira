@@ -138,5 +138,6 @@ Use dev login when `DEV_AUTH=true` / `VITE_DEV_MOCK_LOGIN=true`.
 
 ## Related docs
 
+- [AWS-SERVICES.md](./AWS-SERVICES.md) — per-service wiring and benefits
 - [../infrastructure/AWS-DEPLOYMENT.md](../infrastructure/AWS-DEPLOYMENT.md)
 - [../README.md](../README.md)

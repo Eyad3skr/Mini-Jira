@@ -22,6 +22,7 @@ Team boundaries are enforced on the API (`assertTaskAccess`, DynamoDB GSI on `te
 
 | Document | Description |
 |----------|-------------|
+| [docs/AWS-SERVICES.md](docs/AWS-SERVICES.md) | **AWS services:** wiring, flows, and why each is used |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data model, monitoring |
 | [docs/architecture-diagram.svg](docs/architecture-diagram.svg) | Topology (SVG source) |
 | [docs/ARCHITECTURE-DIAGRAM.md](docs/ARCHITECTURE-DIAGRAM.md) | Formal diagram (AWS Architecture Icons) |
