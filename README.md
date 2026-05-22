@@ -1,8 +1,14 @@
 # Mini-Jira
 
+| | Link |
+|--|------|
+| **Live app** | [https://d2nnx11y19xl0z.cloudfront.net](https://d2nnx11y19xl0z.cloudfront.net) |
+| **Architecture diagram** | [architecture.html](architecture.html) |
+| **Demo video** | [Google Drive](https://drive.google.com/file/d/1JhPeVro-dHBWrCVYjoSIvq69nlXOPXYS/view?usp=sharing) |
+
 Team task management on AWS — React frontend, Express API, DynamoDB, and event-driven notifications.
 
-**Production:** [https://d2nnx11y19xl0z.cloudfront.net](https://d2nnx11y19xl0z.cloudfront.net) · **Region:** `eu-north-1` · **Repository:** [github.com/Eyad3skr/Mini-Jira](https://github.com/Eyad3skr/Mini-Jira)
+**Region:** `eu-north-1` · **Repository:** [github.com/Eyad3skr/Mini-Jira](https://github.com/Eyad3skr/Mini-Jira)
 
 ## Authentication (production)
 
