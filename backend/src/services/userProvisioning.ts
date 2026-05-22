@@ -1,9 +1,8 @@
+import { RESERVED_TEAM_IDS } from '../constants/teams.js';
 import * as teamsRepo from '../db/repositories/teams.js';
 import * as usersRepo from '../db/repositories/users.js';
 import type { UserProfile } from '../types.js';
 import { getCognitoUserEmail } from './cognitoEmail.js';
-
-const PICKABLE_TEAM_BLOCKLIST = new Set(['all']);
 
 function isPlaceholderEmail(email: string, userId: string): boolean {
   const e = email.trim().toLowerCase();
@@ -89,7 +88,7 @@ export async function completeUserOnboarding(
   if (!name || name.length < 2) {
     throw new OnboardingValidationError('Name must be at least 2 characters');
   }
-  if (!teamId || PICKABLE_TEAM_BLOCKLIST.has(teamId)) {
+  if (!teamId || RESERVED_TEAM_IDS.has(teamId)) {
     throw new OnboardingValidationError('Choose a valid team');
   }
 

@@ -1,4 +1,4 @@
-import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { config } from '../../config.js';
 import { docClient } from '../client.js';
 const TableName = config.tables.taskStatusAudit;
@@ -13,4 +13,11 @@ export async function listAuditForTask(taskId) {
         ScanIndexForward: false,
     }));
     return (result.Items ?? []);
+}
+export async function deleteAuditForTask(taskId) {
+    const entries = await listAuditForTask(taskId);
+    await Promise.all(entries.map((e) => docClient.send(new DeleteCommand({
+        TableName,
+        Key: { taskId: e.taskId, auditKey: e.auditKey },
+    }))));
 }

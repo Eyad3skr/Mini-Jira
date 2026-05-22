@@ -49,3 +49,7 @@ export async function deleteTask(taskId) {
     await docClient.send(new DeleteCommand({ TableName, Key: { taskId } }));
     return true;
 }
+export async function syncTeamNameForTeam(teamId, teamName) {
+    const tasks = await listTasksByTeam(teamId);
+    await Promise.all(tasks.map((t) => updateTask(t.taskId, { teamName })));
+}

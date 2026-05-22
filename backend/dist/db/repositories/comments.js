@@ -1,4 +1,4 @@
-import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { config } from '../../config.js';
 import { docClient } from '../client.js';
 const TableName = config.tables.comments;
@@ -18,4 +18,11 @@ export async function createComment(comment) {
 export async function countComments(taskId) {
     const comments = await listComments(taskId);
     return comments.length;
+}
+export async function deleteCommentsForTask(taskId) {
+    const comments = await listComments(taskId);
+    await Promise.all(comments.map((c) => docClient.send(new DeleteCommand({
+        TableName,
+        Key: { taskId: c.taskId, commentId: c.commentId },
+    }))));
 }

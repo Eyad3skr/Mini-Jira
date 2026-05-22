@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { config } from '../../config.js';
 import type { UserProfile } from '../../types.js';
 import { docClient } from '../client.js';
@@ -45,4 +45,11 @@ function toStoredUserItem(user: UserProfile): Record<string, unknown> {
 export async function upsertUser(user: UserProfile): Promise<UserProfile> {
   await docClient.send(new PutCommand({ TableName, Item: toStoredUserItem(user) }));
   return user;
+}
+
+export async function deleteUser(userId: string): Promise<boolean> {
+  const existing = await getUser(userId);
+  if (!existing) return false;
+  await docClient.send(new DeleteCommand({ TableName, Key: { userId } }));
+  return true;
 }

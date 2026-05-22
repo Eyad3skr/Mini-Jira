@@ -100,7 +100,7 @@ flowchart TB
 
 - Cognito JWT on every API request; `custom:role`, `custom:teamId`.
 - Employees: queries scoped by `teamId` (GSI + `assertTaskAccess`).
-- Managers: bypass team filter.
+- Managers: bypass team filter; full CRUD on the team registry (`POST/PATCH/DELETE /api/teams`) with cascade delete of related tasks, projects, and user profiles (Cognito accounts unchanged).
 
 ## Demo scenario
 

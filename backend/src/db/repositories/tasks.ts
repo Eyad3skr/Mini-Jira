@@ -60,3 +60,10 @@ export async function deleteTask(taskId: string): Promise<boolean> {
   await docClient.send(new DeleteCommand({ TableName, Key: { taskId } }));
   return true;
 }
+
+export async function syncTeamNameForTeam(teamId: string, teamName: string): Promise<void> {
+  const tasks = await listTasksByTeam(teamId);
+  await Promise.all(
+    tasks.map((t) => updateTask(t.taskId, { teamName }))
+  );
+}
